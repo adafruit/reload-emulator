@@ -23,8 +23,9 @@ target_link_libraries(apple2e
 	pico_stdlib
 	pico_multicore
 	pico_util
-	libdvi
-	tinyusb_host
+	tinyusb_host tinyusb_pico_pio_usb
+        hardware_interp
+        hardware_pwm
 	fatfs
 )
 

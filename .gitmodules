@@ -1,19 +1,18 @@
-[submodule "platforms/pc/lib/sokol"]
-	path = platforms/pc/lib/sokol
-	url = https://github.com/vsladkov/sokol.git
-[submodule "platforms/pc/lib/imgui"]
-	path = platforms/pc/lib/imgui
-	url = https://github.com/vsladkov/imgui.git
-	branch = docking
-[submodule "platforms/pc/lib/ImGuiFileDialog"]
-	path = platforms/pc/lib/ImGuiFileDialog
-	url = https://github.com/vsladkov/ImGuiFileDialog.git
 [submodule "platforms/rp2040/lib/pico-sdk"]
 	path = platforms/rp2040/lib/pico-sdk
-	url = https://github.com/vsladkov/pico-sdk.git
+	url = https://github.com/raspberrypi/pico-sdk
 [submodule "platforms/rp2040/lib/PicoDVI"]
 	path = platforms/rp2040/lib/PicoDVI
 	url = https://github.com/vsladkov/PicoDVI.git
 [submodule "platforms/rp2040/lib/tinyusb"]
 	path = platforms/rp2040/lib/tinyusb
-	url = https://github.com/vsladkov/tinyusb.git
+	url = https://github.com/liamfraser/tinyusb.git
+[submodule "3rdparty/Pico-PIO-USB"]
+	path = platforms/rp2040/lib/Pico-PIO-USB
+	url = https://github.com/sekigon-gonnoc/Pico-PIO-USB.git
+[submodule "3rdparty/pico-extras"]
+	path = platforms/rp2040/lib/pico-extras
+	url = https://github.com/raspberrypi/pico-extras.git
+[submodule "tools/woz2dsk"]
+	path = tools/woz2dsk
+	url = https://github.com/leesaudan2/woz2dsk/

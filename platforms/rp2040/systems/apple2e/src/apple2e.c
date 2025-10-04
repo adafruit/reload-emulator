@@ -29,18 +29,15 @@
 #include <string.h>
 #include <ctype.h>
 
-#include <pico/platform.h>
+#include <pico.h>
 #include "pico/stdlib.h"
 
-#ifdef OLIMEX_NEO6502
 #include "roms/apple2ee_roms.h"
-#else
-#include "roms/apple2e_roms.h"
-#endif
 #include "images/apple2_images.h"
 // #include "images/apple2_nib_images.h"
 
 #include "tusb.h"
+#include "../lib/Pico-PIO-USB/src/pio_usb_configuration.h"
 #include "ff.h"
 
 #include "chips/chips_common.h"
@@ -71,11 +68,7 @@
 #include "hardware/interp.h"
 #include "pico/multicore.h"
 
-#include "tmds_encode.h"
-
-#include "common_dvi_pin_configs.h"
-#include "dvi.h"
-#include "dvi_serialiser.h"
+#include "../../../Framebuffer_RP2350.c"
 
 #include "audio.h"
 
@@ -125,7 +118,7 @@ void app_init(void) {
     apple2e_init(&state.apple2e, &desc);
 }
 
-#ifdef OLIMEX_NEO6502
+#if 0 // def OLIMEX_NEO6502
 // TMDS bit clock 400 MHz
 // DVDD 1.3V
 #define FRAME_WIDTH  800
@@ -135,20 +128,10 @@ void app_init(void) {
 #else
 // TMDS bit clock 400 MHz
 // DVDD 1.3V
-#define FRAME_WIDTH  800
-#define FRAME_HEIGHT 600
-#define VREG_VSEL    VREG_VOLTAGE_1_30
-#define DVI_TIMING   dvi_timing_800x600p_60hz
+#define FRAME_WIDTH  640
+#define FRAME_HEIGHT 480
+#define VREG_VSEL    VREG_VOLTAGE_1_20
 #endif  // OLIMEX_NEO6502
-
-uint32_t __not_in_flash() tmds_palette[PALETTE_SIZE * 6];
-uint32_t __not_in_flash() empty_tmdsbuf[3 * FRAME_WIDTH / DVI_SYMBOLS_PER_WORD];
-
-uint8_t __not_in_flash() scanbuf[FRAME_WIDTH];
-
-struct dvi_inst dvi0;
-
-void tmds_palette_init() { tmds_setup_palette24_symbols(apple2e_palette, tmds_palette, PALETTE_SIZE); }
 
 void kbd_raw_key_down(int code) {
     if (isascii(code)) {
@@ -351,7 +334,6 @@ void gamepad_state_update(uint8_t index, uint8_t hat_state, uint32_t button_stat
 }
 
 extern void apple2e_render_scanline(const uint32_t *pixbuf, uint32_t *scanbuf, size_t n_pix);
-extern void copy_tmdsbuf(uint32_t *dest, const uint32_t *src);
 
 static inline void __not_in_flash_func(render_scanline)(const uint32_t *pixbuf, uint32_t *scanbuf, size_t n_pix) {
     interp_config c;
@@ -376,46 +358,55 @@ static inline void __not_in_flash_func(render_scanline)(const uint32_t *pixbuf, 
 #define APPLE2E_EMPTY_LINES   ((FRAME_HEIGHT - APPLE2E_SCREEN_HEIGHT * 2) / 4)
 #define APPLE2E_EMPTY_COLUMNS ((FRAME_WIDTH - APPLE2E_SCREEN_WIDTH) / 2)
 
-static inline void __not_in_flash_func(render_empty_scanlines)() {
-    for (int y = 0; y < APPLE2E_EMPTY_LINES; y += 2) {
-        uint32_t *tmdsbuf;
-        queue_remove_blocking_u32(&dvi0.q_tmds_free, &tmdsbuf);
-        copy_tmdsbuf(tmdsbuf, empty_tmdsbuf);
-        queue_add_blocking_u32(&dvi0.q_tmds_valid, &tmdsbuf);
+picodvi_framebuffer_obj_t picodvi;
 
-        queue_remove_blocking_u32(&dvi0.q_tmds_free, &tmdsbuf);
-        copy_tmdsbuf(tmdsbuf, empty_tmdsbuf);
-        queue_add_blocking_u32(&dvi0.q_tmds_valid, &tmdsbuf);
-    }
-}
+#define RGB232(r, g, b) ( \
+    (((r) >> 6) << 6) | \
+    (((g) >> 5) << 2) | \
+    (((b) >> 6)))
 
-static inline void __not_in_flash_func(render_frame)() {
-    for (int y = 0; y < APPLE2E_SCREEN_HEIGHT; y += 2) {
-        uint32_t *tmdsbuf;
-        queue_remove_blocking_u32(&dvi0.q_tmds_free, &tmdsbuf);
-        render_scanline((const uint32_t *)(&state.apple2e.fb[y * 280]), (uint32_t *)(&scanbuf[APPLE2E_EMPTY_COLUMNS]),
-                        280);
-        tmds_encode_palette_data((const uint32_t *)scanbuf, tmds_palette, tmdsbuf, FRAME_WIDTH, PALETTE_BITS);
-        queue_add_blocking_u32(&dvi0.q_tmds_valid, &tmdsbuf);
+uint8_t hstx_lut[16] = {
+    RGB232(0x00, 0x00, 0x00), /* Black */
+    RGB232(0xA7, 0x0B, 0x4C), /* Dark Red */
+    RGB232(0x40, 0x1C, 0xF7), /* Dark Blue */
+    RGB232(0xE6, 0x28, 0xFF), /* Purple */
+    RGB232(0x00, 0x74, 0x40), /* Dark Green */
+    RGB232(0x80, 0x80, 0x80), /* Dark Gray */
+    RGB232(0x19, 0x90, 0xFF), /* Medium Blue */
+    RGB232(0xBF, 0x9C, 0xFF), /* Light Blue */
+    RGB232(0x40, 0x63, 0x00), /* Brown */
+    RGB232(0xE6, 0x6F, 0x00), /* Orange */
+    RGB232(0x80, 0x80, 0x80), /* Light Grey */
+    RGB232(0xFF, 0x8B, 0xBF), /* Pink */
+    RGB232(0x19, 0xD7, 0x00), /* Light Green */
+    RGB232(0xBF, 0xE3, 0x08), /* Yellow */
+    RGB232(0x58, 0xF4, 0xBF), /* Aquamarine */
+    RGB232(0xFF, 0xFF, 0xFF)  /* White */
+};
 
-        queue_remove_blocking_u32(&dvi0.q_tmds_free, &tmdsbuf);
-        render_scanline((const uint32_t *)(&state.apple2e.fb[(y + 1) * 280]),
-                        (uint32_t *)(&scanbuf[APPLE2E_EMPTY_COLUMNS]), 280);
-        tmds_encode_palette_data((const uint32_t *)scanbuf, tmds_palette, tmdsbuf, FRAME_WIDTH, PALETTE_BITS);
-        queue_add_blocking_u32(&dvi0.q_tmds_valid, &tmdsbuf);
-    }
+static inline void __not_in_flash_func(screen_to_hstx()) {
+    for (int y = 0; y < APPLE2E_SCREEN_HEIGHT; y ++) {
+        uint8_t *apple_fb = _apple2e_get_fb_addr(&state.apple2e, y);
+        uint8_t *hstx_fb = &((uint8_t*)picodvi.framebuffer)[(APPLE2E_EMPTY_LINES + y) * picodvi.width + APPLE2E_EMPTY_COLUMNS];
+
+        for(int x = 0; x < APPLE2E_SCREEN_WIDTH / 2; x++) {
+            uint8_t in = *apple_fb++;
+            uint8_t c1 = hstx_lut[in >> 4];
+            uint8_t c2 = hstx_lut[in & 0xf];
+            hstx_fb[0] = c1;
+            hstx_fb[1] = c2;
+            hstx_fb += 2;
+        }
+    } 
 }
 
 void __not_in_flash_func(core1_main()) {
     audio_init(_AUDIO_PIN, 44100);
 
-    dvi_register_irqs_this_core(&dvi0, DMA_IRQ_0);
-    dvi_start(&dvi0);
+    common_hal_picodvi_framebuffer_start(&picodvi);
 
     while (1) {
-        render_empty_scanlines();
-        render_frame();
-        render_empty_scanlines();
+        tight_loop_contents();
     }
 
     __builtin_unreachable();
@@ -433,25 +424,44 @@ void wait_for_msc_ready(void) {
 int main() {
     vreg_set_voltage(VREG_VSEL);
     sleep_ms(10);
-    set_sys_clock_khz(DVI_TIMING.bit_clk_khz, true);
+    set_sys_clock_khz(264000, true);
 
     stdio_init_all();
+
+    pio_usb_configuration_t pio_cfg = PIO_USB_DEFAULT_CONFIG;
+    _Static_assert(PIN_USB_HOST_DP + 1 == PIN_USB_HOST_DM || PIN_USB_HOST_DP - 1 == PIN_USB_HOST_DM, "Permitted USB D+/D- configuration");
+    pio_cfg.pinout = PIN_USB_HOST_DP + 1 == PIN_USB_HOST_DM ? PIO_USB_PINOUT_DPDM : PIO_USB_PINOUT_DMDP;
+    pio_cfg.pin_dp = PIN_USB_HOST_DP;
+    pio_cfg.tx_ch = 9;
+    pio_cfg.pio_tx_num = 1;
+    pio_cfg.pio_rx_num = 1;
+
+    #ifdef PIN_USB_HOST_VBUS
+    printf("Enabling USB host VBUS power on GP%d\r\n", PIN_USB_HOST_VBUS);
+    gpio_init(PIN_USB_HOST_VBUS);
+    gpio_set_dir(PIN_USB_HOST_VBUS, GPIO_OUT);
+    gpio_put(PIN_USB_HOST_VBUS, 1);
+    #endif
+
+    tuh_configure(CFG_TUH_RPI_PIO_USB, TUH_CFGID_RPI_PIO_USB_CONFIGURATION, &pio_cfg);
+    printf("Init USB...\n");
+    printf("USB D+/D- on GP%d and GP%d\r\n", PIN_USB_HOST_DP, PIN_USB_HOST_DM);
+    printf("TinyUSB Host HID Controller Example\r\n");
+
     tusb_init();
 
     printf("Configuring DVI\n");
 
-    dvi0.timing = &DVI_TIMING;
-    dvi0.ser_cfg = DVI_DEFAULT_SERIAL_CONFIG;
-    dvi_init(&dvi0, next_striped_spin_lock_num(), next_striped_spin_lock_num());
-
-    tmds_palette_init();
-    tmds_encode_palette_data((const uint32_t *)scanbuf, tmds_palette, empty_tmdsbuf, FRAME_WIDTH, PALETTE_BITS);
+    if (!common_hal_picodvi_framebuffer_construct(&picodvi, 640, 240, HSTX_CKP, HSTX_D0P, HSTX_D1P, HSTX_D2P, 8)) { 
+        printf("failed\n");
+        abort();
+    }
 
     printf("Core 1 start\n");
     hw_set_bits(&bus_ctrl_hw->priority, BUSCTRL_BUS_PRIORITY_PROC1_BITS);
     multicore_launch_core1(core1_main);
 
-    wait_for_msc_ready();
+    // wait_for_msc_ready();
 
     app_init();
 
@@ -464,6 +474,7 @@ int main() {
         }
 
         apple2e_screen_update(&state.apple2e);
+        screen_to_hstx();
         tuh_task();
 
         uint32_t end_time_in_micros = time_us_32();

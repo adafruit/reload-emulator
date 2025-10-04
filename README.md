@@ -1,5 +1,9 @@
 # Reload - Portable Cycle-Stepped Emulator for Retro Computers
 
+NOTES:
+ - This fork is for the Adafruit Fruit Jam and only builds the Apple IIe emulator
+ - starts but video is glitchy and disk images don't seem to be working
+
 Emulated systems:
 
 ### Apple //e
