@@ -11,7 +11,7 @@ def get_url_with_checksum(url, hasher, digest):
     content = response.content
     got_digest = hashlib.new(hasher, content).hexdigest()
     if digest != got_digest:
-        raise RuntimeError("Expected {digest} got {get_digest}")
+        raise RuntimeError(f"Expected {digest} got {got_digest}")
     return content
 
 def bin2c(target, data, per_row=8):
@@ -26,30 +26,11 @@ def rom_array(target, name, data):
     print
 
 
-def do_woz(name, url, hasher, digest):
-    filename = f"src/images/{name}.h"
-    symbol = f"{name}_nib_image"
-
-    if os.path.exists(filename):
-        return
-
-    print(f"Downloading and converting {name}")
-
-    woz_content = get_url_with_checksum(url, hasher, digest)
-    with TemporaryDirectory() as tmpdir:
-        path = pathlib.Path(tmpdir)
-        woz = (path / "input.woz")
-        nib = (path / "input.nib")
-        woz.write_bytes(woz_content)
-        subprocess.check_call(["tools/woz2dsk/woz2dsk", woz, nib])
-        nib_content = nib.read_bytes()
-
-    with open(filename, "w") as f:
-        rom_array(f, symbol, nib_content)
-
 def do_dsk(name, url, hasher, digest, is_prodos):
     filename = f"src/images/{name}.h"
     symbol = f"{name}_nib_image"
+    nibs.append(symbol)
+    includes.append(f"{name}.h")
 
     if os.path.exists(filename):
         return
@@ -69,7 +50,25 @@ def do_dsk(name, url, hasher, digest, is_prodos):
     with open(filename, "w") as f:
         rom_array(f, symbol, nib_content)
 
-#do_woz("moon_patrol", "https://archive.org/download/wozaday_Moon_Patrol/00playable.woz", "sha256", "13dd66d1fe653bd61038cf60a452d7c946cf05ccc8cf41bb35cfa79608b79bd4")
+nibs = []
+includes = []
 
-do_dsk("moon_patrol", "https://archive.org/download/Moon_Patrol/Moon_Patrol.dsk", "sha1", "edd50462f044fa416d19bdc43f61ab7b881de067", False)
-do_dsk("moon_patrol_prodos", "https://archive.org/download/Moon_Patrol/Moon_Patrol.dsk", "sha1", "edd50462f044fa416d19bdc43f61ab7b881de067", True)
+do_dsk("prodos", "https://archive.org/download/ProDOS_2_4_1/ProDOS_2_4_1.dsk", "sha1", "88d0d66867e607d6ee1117f61b83f8fe37d29f69", False)
+do_dsk("moon_patrol", "https://archive.org/download/Moon_Patrol/Moon_Patrol.dsk", "sha1", "edd50462f044fa416d19bdc43f61ab7b881de067", True)
+
+// TODO: neptune, karateka, lode runner?
+
+with open("src/images/apple2_images.h", "w") as f:
+    print("#pragma once", file=f)
+    print(file=f)
+
+    for i in includes:
+        print(f"#include \"{i}\"", file=f)
+    print(file=f)
+
+    print("uint8_t* const apple2_nib_images[] = {", file=f)
+    for n in nibs:
+        print(f"    (uint8_t*){n},", file=f)
+    print("};", file=f)
+
+    print("""uint8_t* apple2_po_images[] = {}; uint32_t apple2_po_image_sizes[] = {}; char* apple2_msc_images[] = {};""", file=f)

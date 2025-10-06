@@ -95,7 +95,7 @@ static void audio_callback(const uint8_t sample, void *user_data) {
 // Get apple2e_desc_t struct based on joystick type
 apple2e_desc_t apple2e_desc(void) {
     return (apple2e_desc_t){
-        .fdc_enabled = false,
+        .fdc_enabled = true,
         .hdc_enabled = true,
         .hdc_internal_flash = false,
         .audio =
