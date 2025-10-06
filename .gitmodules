@@ -1,9 +1,6 @@
 [submodule "platforms/rp2040/lib/pico-sdk"]
 	path = platforms/rp2040/lib/pico-sdk
 	url = https://github.com/raspberrypi/pico-sdk
-[submodule "platforms/rp2040/lib/PicoDVI"]
-	path = platforms/rp2040/lib/PicoDVI
-	url = https://github.com/vsladkov/PicoDVI.git
 [submodule "platforms/rp2040/lib/tinyusb"]
 	path = platforms/rp2040/lib/tinyusb
 	url = https://github.com/liamfraser/tinyusb.git
