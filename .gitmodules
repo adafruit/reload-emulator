@@ -10,6 +10,3 @@
 [submodule "3rdparty/pico-extras"]
 	path = platforms/rp2040/lib/pico-extras
 	url = https://github.com/raspberrypi/pico-extras.git
-[submodule "tools/woz2dsk"]
-	path = tools/woz2dsk
-	url = https://github.com/leesaudan2/woz2dsk/
