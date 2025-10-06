@@ -53,8 +53,8 @@ def do_dsk(name, url, hasher, digest, is_prodos):
 nibs = []
 includes = []
 
-do_dsk("prodos", "https://archive.org/download/ProDOS_2_4_1/ProDOS_2_4_1.dsk", "sha1", "88d0d66867e607d6ee1117f61b83f8fe37d29f69", False)
-do_dsk("moon_patrol", "https://archive.org/download/Moon_Patrol/Moon_Patrol.dsk", "sha1", "edd50462f044fa416d19bdc43f61ab7b881de067", True)
+do_dsk("prodos", "https://archive.org/download/ProDOS_2_4_1/ProDOS_2_4_1.dsk", "sha1", "88d0d66867e607d6ee1117f61b83f8fe37d29f69", False) ## !!
+do_dsk("moon_patrol", "https://archive.org/download/Moon_Patrol/Moon_Patrol.dsk", "sha1", "edd50462f044fa416d19bdc43f61ab7b881de067", False)
 
 # TODO: neptune, karateka, lode runner?
 

@@ -172,6 +172,10 @@ void kbd_raw_key_down(int code) {
             if (sys->fdc.valid) {
                 uint8_t index = code - 0x13A;
                 if (CHIPS_ARRAY_SIZE(apple2_nib_images) > index) {
+                    if (sys->kbd_open_apple_pressed) {
+                        apple2e_desc_t desc = apple2e_desc();
+                        apple2e_init(&state.apple2e, &desc);
+                    }
                     disk2_fdd_insert_disk(&sys->fdc.fdd[0], apple2_nib_images[index]);
                 }
             }
