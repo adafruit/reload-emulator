@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 TAG=fruitjam
 BUILD=build
 export CFLAGS="-include $(pwd)/fruitjam_cflags.h -g3 -ggdb"
@@ -13,7 +14,7 @@ cmake -S platforms/rp2040 -B $BUILD \
     ${CMAKE_ARGS} "$@"
 
 if ! [ -e tools/dsk2nib/src/dsk2nib ]; then
-    (cd tools/dsk2nib/src/dsk2nib && gcc main.c -o dsk2nib)
+    (cd tools/dsk2nib/src && gcc main.c -o dsk2nib)
 fi
 
 if ! [ -f src/roms/apple2ee_roms.h ] ; then
