@@ -6,18 +6,11 @@ add_executable(apple2e
 	${CMAKE_CURRENT_SOURCE_DIR}/src/apple2e.c
 	${CMAKE_CURRENT_SOURCE_DIR}/src/utils.S
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/hid_app.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../src/msc_app.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../src/audio.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../lib/sd_driver/tf_card.c
 )
 
 target_compile_options(apple2e PRIVATE -Wall)
-
-target_compile_definitions(apple2e PRIVATE
-	# DVI_DEFAULT_SERIAL_CONFIG=pico_sock_cfg
-	DVI_DEFAULT_SERIAL_CONFIG=olimex_neo6502_cfg
-	# DVI_DEFAULT_SERIAL_CONFIG=olimex_rp2040pc_cfg
-	# DVI_DEFAULT_SERIAL_CONFIG=pico_zero_cfg
-)
 
 target_link_libraries(apple2e
 	pico_stdlib
@@ -26,6 +19,7 @@ target_link_libraries(apple2e
 	tinyusb_host tinyusb_pico_pio_usb
         hardware_interp
         hardware_pwm
+        hardware_spi
 	fatfs
 )
 

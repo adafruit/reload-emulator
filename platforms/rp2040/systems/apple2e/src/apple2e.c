@@ -173,6 +173,7 @@ void kbd_raw_key_down(int code) {
                 uint8_t index = code - 0x13A;
                 if (CHIPS_ARRAY_SIZE(apple2_nib_images) > index) {
                     if (sys->kbd_open_apple_pressed) {
+                        prodos_hdd_remove_disk(&sys->hdc.hdd[0]);
                         apple2e_desc_t desc = apple2e_desc();
                         apple2e_init(&state.apple2e, &desc);
                     }
@@ -181,6 +182,17 @@ void kbd_raw_key_down(int code) {
             }
             break;
         }
+        case 0x143:  // F10
+            if (sys->hdc.valid) {
+                if (sys->kbd_open_apple_pressed) {
+                    apple2e_desc_t desc = apple2e_desc();
+                    apple2e_init(&state.apple2e, &desc);
+                }
+                if (CHIPS_ARRAY_SIZE(apple2_msc_images) > 0) {
+                    prodos_hdd_insert_disk_msc(&sys->hdc.hdd[0], apple2_msc_images[0]);
+                }
+            }
+            break;
 
         case 0x145:  // F12
             apple2e_reset(sys);
@@ -416,14 +428,7 @@ void __not_in_flash_func(core1_main()) {
     __builtin_unreachable();
 }
 
-extern bool msc_inquiry_complete;
-
-void wait_for_msc_ready(void) {
-    while (!msc_inquiry_complete) {
-        sleep_us(16666);
-        tuh_task();
-    }
-}
+static FATFS fatfs;
 
 int main() {
     vreg_set_voltage(VREG_VSEL);
@@ -465,7 +470,16 @@ int main() {
     hw_set_bits(&bus_ctrl_hw->priority, BUSCTRL_BUS_PRIORITY_PROC1_BITS);
     multicore_launch_core1(core1_main);
 
-    // wait_for_msc_ready();
+    int retry=5;
+    FRESULT fr = FR_NO_FILESYSTEM;
+    while ((retry > 0) && (fr != FR_OK)) {
+        fr = f_mount(&fatfs, "", 0);
+        sleep_ms(100);
+        retry--;
+    }
+    if (fr != FR_OK) {
+        printf("mount fail");
+    }     
 
     app_init();
 

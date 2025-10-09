@@ -2,7 +2,10 @@
 
 NOTES:
  - This fork is for the Adafruit Fruit Jam and only builds the Apple IIe emulator
- - starts but video is glitchy and disk images don't seem to be working
+ - Can use built in images OR "Total Replay v5.2.hdv" from SD card (must use exact name!)
+ - Remove SD card and reset to use built in floppy images instead
+ - No gamepad support
+ - No sound support
 
 Emulated systems:
 

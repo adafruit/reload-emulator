@@ -16,5 +16,12 @@
 #define PIN_USB_HOST_DM (2u)
 #define PIN_USB_HOST_VBUS (11u)
 
+#define SD_SCLK         34
+#define SD_MOSI         35
+#define SD_MISO         36 
+#define SD_CS           39
+#define SD_DETECT       33
+#define SD_SPIREG       spi0
+
 // Note that by good luck (??) olimex_neo6502_cfg may match fruitjam
 #endif

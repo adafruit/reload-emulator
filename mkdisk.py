@@ -71,4 +71,4 @@ with open("src/images/apple2_images.h", "w") as f:
         print(f"    (uint8_t*){n},", file=f)
     print("};", file=f)
 
-    print("""uint8_t* apple2_po_images[] = {}; uint32_t apple2_po_image_sizes[] = {}; char* apple2_msc_images[] = {};""", file=f)
+    print("""uint8_t* apple2_po_images[] = {}; uint32_t apple2_po_image_sizes[] = {}; char* apple2_msc_images[] = {"Total Replay v5.2.hdv"};""", file=f)
