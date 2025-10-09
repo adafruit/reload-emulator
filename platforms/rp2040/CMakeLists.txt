@@ -23,5 +23,9 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}/src
 	)
 
+add_subdirectory(lib/pico-extras/src/rp2_common/pico_audio_i2s)
+add_subdirectory(lib/pico-extras/src/common/pico_audio)
+add_subdirectory(lib/pico-extras/src/common/pico_util_buffer)
+
 add_subdirectory(lib/fatfs/source)
 add_subdirectory(systems)

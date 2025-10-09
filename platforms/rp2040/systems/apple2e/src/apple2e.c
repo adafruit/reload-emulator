@@ -417,12 +417,12 @@ static inline void __not_in_flash_func(screen_to_hstx()) {
 }
 
 void __not_in_flash_func(core1_main()) {
-    audio_init(_AUDIO_PIN, 44100);
+    audio_init(44100);
 
     common_hal_picodvi_framebuffer_start(&picodvi);
 
     while (1) {
-        tight_loop_contents();
+        audio_handle_buffer();
     }
 
     __builtin_unreachable();
@@ -465,6 +465,8 @@ int main() {
         printf("failed\n");
         abort();
     }
+
+    audio_early_init();
 
     printf("Core 1 start\n");
     hw_set_bits(&bus_ctrl_hw->priority, BUSCTRL_BUS_PRIORITY_PROC1_BITS);

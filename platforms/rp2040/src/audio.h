@@ -13,8 +13,11 @@ extern "C" {
 #define _AUDIO_PIN (8)
 #endif
 
-void audio_init(uint8_t audio_pin, uint16_t sample_freq);
+void audio_early_init();
+void audio_init(uint16_t sample_freq); // has to happen on the core that'll handle audio interrupts
 void audio_push_sample(const uint8_t sample);
+void audio_dac_init(void);
+void audio_handle_buffer(void);
 
 #ifdef __cplusplus
 }

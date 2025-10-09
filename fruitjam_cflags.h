@@ -23,5 +23,11 @@
 #define SD_DETECT       33
 #define SD_SPIREG       spi0
 
-// Note that by good luck (??) olimex_neo6502_cfg may match fruitjam
+#define PICO_AUDIO_I2S_PIO 0
+#define PICO_AUDIO_I2S_DMA_IRQ 1
+#define PICO_AUDIO_I2S_DATA_PIN 24
+#define PICO_AUDIO_I2S_CLOCK_PIN_BASE 26
+#define PICO_AUDIO_I2S_MONO_INPUT 1 
+#define PICO_AUDIO_I2S_MONO_OUTPUT 1 
+
 #endif
