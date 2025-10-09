@@ -1,4 +1,4 @@
-name: Build pico-mac
+name: Build
 
 on:
   push:
