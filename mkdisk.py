@@ -14,6 +14,13 @@ def get_url_with_checksum(url, hasher, digest):
         raise RuntimeError(f"Expected {digest} got {got_digest}")
     return content
 
+def get_file_with_checksum(file, hasher, digest):
+    content = file.read_bytes()
+    got_digest = hashlib.new(hasher, content).hexdigest()
+    if digest != got_digest:
+        raise RuntimeError(f"Expected {digest} got {got_digest}")
+    return content
+
 def bin2c(target, data, per_row=8):
     for i in range(0, len(data), per_row):
         row = ",".join("% 3d" % b for b in data[i:i+per_row])
@@ -37,8 +44,17 @@ def do_dsk(name, url, hasher, digest, is_prodos):
 
     dashp = ["-pp"] if is_prodos else []
 
-    print(f"Downloading and converting {name}")
-    dsk_content = get_url_with_checksum(url, hasher, digest)
+    if url.startswith("https://"):
+        print(f"Downloading and converting {name}")
+        dsk_content = get_url_with_checksum(url, hasher, digest)
+
+    else:  # try local file path
+        print(f"Converting {name}")
+        file = pathlib.Path(url)
+        if not file.exists():
+            raise FileNotFoundError(f"File Not Found: {url}")
+        dsk_content = get_file_with_checksum(file, hasher, digest)
+
     with TemporaryDirectory() as tmpdir:
         path = pathlib.Path(tmpdir)
         dsk = (path / "input.dsk")
@@ -55,6 +71,15 @@ includes = []
 
 do_dsk("prodos", "https://archive.org/download/ProDOS_2_4_1/ProDOS_2_4_1.dsk", "sha1", "88d0d66867e607d6ee1117f61b83f8fe37d29f69", False) ## !!
 do_dsk("moon_patrol", "https://archive.org/download/Moon_Patrol/Moon_Patrol.dsk", "sha1", "edd50462f044fa416d19bdc43f61ab7b881de067", False)
+do_dsk("oregon_trail1", "https://archive.org/download/Oregon_Trail_Disk_1_of_2/Oregon_Trail_Disk_1_of_2.dsk", "sha1", "fb0c887c7902106a72327f9797cdd14a254e3228", False)
+do_dsk("reader_rabbit", "https://archive.org/download/ReaderRabbit11Ivyrea/Reader%20Rabbit.dsk", "sha1", "f8061c96227ccb6d230b76981f52533f74a3068c", False)
+do_dsk("kraken", "https://archive.org/download/kraken_a_deep_sea_quest_apple_ii_1989/playable.dsk", "sha1", "80ea82becdd6c948b3810f34c1614eee396ee68c", False)
+do_dsk("zork", "https://archive.org/download/a2_Zork_I_The_Great_Underground_Empire_1980_Infocom_PASCAL/Zork_I_The_Great_Underground_Empire_1980_Infocom_PASCAL.dsk", "sha1", "088d970ddcc97ed0fac4ce661b784533b9440b49", False)
+# do_dsk("", "", "sha1", "", False)
+
+
+# local file path to .dsk file instead of URL
+# do_dsk("number_munchers", "Number Munchers (v1.3-64K-1986).dsk", "sha1", "4725fc7e170d315b57fa91edb68fdcf16d32077b", False)
 
 # TODO: neptune, karateka, lode runner?
 
